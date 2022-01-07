@@ -64,11 +64,12 @@ if __name__ == "__main__":
     CKPT_PATH = os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "model.pth")
 
     scorer = Scorer()
-    scorer = scorer.load_state_dict(torch.load(CKPT_PATH))
+    scorer.load_state_dict(torch.load(CKPT_PATH, map_location=CFG.DEVICE))
     scorer.to(CFG.DEVICE)
+    scorer.eval()
     
     print("Evaluating...")
-    evaluate_tac("TAC2010_all.json", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_tac.tsv"), scorer)
-    evaluate_newsroom("newsroom-human-eval.csv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_newsroom.tsv"), scorer)
-    evaluate_realsumm("realsumm_100.tsv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_realsumm.tsv"), scorer)
+    evaluate_tac("human/tac/TAC2010_all.json", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_tac.tsv"), scorer)
+    evaluate_newsroom("human/newsroom/newsroom-human-eval.csv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_newsroom.tsv"), scorer)
+    evaluate_realsumm("human/realsumm/realsumm_100.tsv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_realsumm.tsv"), scorer)
    
