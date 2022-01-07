@@ -88,7 +88,7 @@ def main():
     training_sets = os.listdir(result_root)
     level="summary"
 
-    sd_abs, sd_ext = merge_results(result_root, training_sets, False)
+    sd_abs, sd_ext = merge_results(result_root, training_sets, True)
 
     for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]:
         sd = dataset
