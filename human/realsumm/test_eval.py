@@ -86,7 +86,7 @@ def main():
     # Configurations 
     result_root = "../../exp/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
-    level="system"
+    level="summary"
 
     sd_abs, sd_ext = merge_results(result_root, training_sets, False)
 
@@ -98,7 +98,7 @@ def main():
         print("---------------{}--------------".format(name))
         for pair in all_pairs: print(pair[1])
         for pair in all_pairs:
-            for method in [pearsonr, spearmanr, kendalltau]:
+            for method in [spearmanr]: #, pearsonr, kendalltau]:
                 corr = calc_corr(level, method, pair, sd, systems)
                 print("%.4f" % corr, end=" ")
             

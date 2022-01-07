@@ -178,9 +178,9 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
 def cc_all(plot = False):
     BERT_result_prefix = "../../exp/result_bert_base_uncased/"
     datasets = os.listdir(BERT_result_prefix)
-    tac_json_file = "../../TAC2010_all.json"
+    tac_json_file = "TAC2010_all.json"
     human_only="machine"
-    level = "system"
+    level = "summary"
 
     tac_scores = load_tac_json(tac_json_file, human_only)
     result_dict = {}
@@ -193,7 +193,7 @@ def cc_all(plot = False):
             print (dataset, method, end='\t')
             tac_results = read_tac_test_result(BERT_result_file, tac_json_file, human_only)
             result_dict[dataset] = tac_results
-            for corr_method in [pearsonr, spearmanr, kendalltau]:
+            for corr_method in [spearmanr]: # , pearsonr, kendalltau]:
                 calc_cc(tac_results, tac_scores, method=corr_method, level=level)
             print("")
 

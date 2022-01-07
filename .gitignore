@@ -14,6 +14,8 @@ datasets
 *.xlsx
 
 *.tsv
+*.txt
+*.csv
 *.ckpt.*
 checkpoint
 *-checkpoint.ipynb

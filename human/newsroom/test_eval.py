@@ -261,7 +261,7 @@ def main():
     level = "summary" # "system", "summary", or "pooled"
 
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
-    correlation_types = ["pearsonr", "spearmanr", "kendalltau"]
+    correlation_types = ["spearmanr"] #, "pearsonr",  "kendalltau"]
     # End of configurations
 
     

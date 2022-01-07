@@ -74,7 +74,7 @@ def main():
     scores = get_scores(score_path, summary_types, setIDs)
     rouge_scores = get_rouge(rouge_score_path)
 
-    method = kendalltau
+    method = spearmanr
     level = 'summary'
     
     output = calc_corr(rouge_scores, scores, rscore_type, hscore_type, method, level)
