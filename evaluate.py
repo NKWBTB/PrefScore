@@ -14,7 +14,7 @@ def evaluate(references, summaries, scorer):
     
     scores = []
     for reference, summary in zip(references, summaries):
-        score = scorer(reference, [summary]*len(reference)).squeeze().mean().detach().cpu().numpy()
+        score = scorer(reference, [summary]*len(reference)).squeeze().mean().detach().cpu().numpy().item()
         scores.append(score)
     
     return scores
