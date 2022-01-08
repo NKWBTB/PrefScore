@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -84,7 +85,13 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION):
         epochs -= 1
 
 if __name__ == "__main__":
-    DATASET='billsum'
+    parser = argparse.ArgumentParser(
+        description="Train the model from a preprocessed dataset.")
+    parser.add_argument('--dataset', '-d', default='billsum',
+                        help="Support 'billsum', 'big_patent' or 'scientific_papers'.")
+    args = parser.parse_args()
+
+    DATASET=args.dataset
 
     train_set = CustomDataset(os.path.join(CFG.DATASET_ROOT, DATASET, CFG.METHOD, 'train.tsv'))
     print(len(train_set))
@@ -92,7 +99,7 @@ if __name__ == "__main__":
     model = Siamese()
     model.to(CFG.DEVICE)
 
-    print("Training...")
+    print("Training from", DATASET)
     train_model(model, train_set)
 
     CKPT_PATH = os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "model.pth")

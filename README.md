@@ -7,4 +7,6 @@ PrefScore for summarization evaluation
 - [Pytorch](https://pytorch.org/)
 - [Hugginface transformers](https://huggingface.co/docs/transformers/index)
 - [Spacy](https://spacy.io/)
+- [Scipy](https://scipy.org/)
+- [SummEval](https://github.com/Yale-LILY/SummEval) (Optional)
 - [NLTK](https://www.nltk.org/) (Optional)

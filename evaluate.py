@@ -1,3 +1,4 @@
+import argparse
 import csv
 import json
 import html
@@ -6,7 +7,18 @@ import config as CFG
 import torch
 from model import Scorer
 
-# Evaluate for TAC2010
+def evaluate(references, summaries, scorer):
+    if isinstance(references[0], str):
+        # For single document summarization
+        references = [[ref] for ref in references]
+    
+    scores = []
+    for reference, summary in zip(references, summaries):
+        score = scorer(reference, [summary]*len(reference)).squeeze().mean().detach().cpu().numpy()
+        scores.append(score)
+    
+    return scores
+
 def evaluate_tac(json_file, output_path, scorer):
     with open(output_path, "w") as f:
         tac = json.load(open(json_file, 'r', encoding="utf-8"))
@@ -27,7 +39,8 @@ def evaluate_tac(json_file, output_path, scorer):
                     if len(summary) == 0:
                         summary = " ."
                     
-                    label = scorer([article], [summary]).detach().cpu().numpy()[0][0]
+                    # label = scorer([article], [summary]).detach().cpu().numpy()[0][0]
+                    label = evaluate([article], [summary], scorer)[0]
                     f.write(str(label) + "\n")
 
 def evaluate_newsroom(csv_file, output_path, scorer):
@@ -43,7 +56,8 @@ def evaluate_newsroom(csv_file, output_path, scorer):
                     _doc=html.unescape(_doc) 
                     _sum=html.unescape(_sum) 
 
-                    label = scorer([_doc], [_sum]).detach().cpu().numpy()[0][0]
+                    # label = scorer([_doc], [_sum]).detach().cpu().numpy()[0][0]
+                    label = evaluate([_doc], [_sum], scorer)[0]
                     f.write(str(label) + "\n")
                 counter += 1
 
@@ -56,20 +70,46 @@ def evaluate_realsumm(tsv_file, output_path, scorer):
                 for j in range(1, len(line)) :
                     _sum = ' '.join(line[j].split())
                     
-                    label = scorer([_doc], [_sum]).detach().cpu().numpy()[0][0]
+                    # label = scorer([_doc], [_sum]).detach().cpu().numpy()[0][0]
+                    label = evaluate([_doc], [_sum], scorer)[0]
                     f.write(str(label) + "\n")
 
 if __name__ == "__main__":
-    DATASET='billsum'
+    parser = argparse.ArgumentParser(
+        description="Evaluate the trained model on a target dataset.")
+    group1 = parser.add_mutually_exclusive_group()
+    group1.add_argument('--dataset', '-d', default='billsum',
+                        help="Training domain, support 'billsum', 'big_patent' or 'scientific_papers'.")
+    group1.add_argument('--ckpt', '-c',
+                        help="Specify the pth model checkpoint to evaluate.")
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('--target', '-t', default='newsroom',
+                        help="Target dataset, support 'newsroom', 'realsumm' or 'tac2010'.")
+    group2.add_argument('--tsv', '-T',
+                        help="A custom tsv format target dataset.")
+    args = parser.parse_args()
+
+    DATASET=args.dataset
     CKPT_PATH = os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "model.pth")
+    if args.ckpt:
+        CKPT_PATH = args.ckpt
 
     scorer = Scorer()
     scorer.load_state_dict(torch.load(CKPT_PATH, map_location=CFG.DEVICE))
     scorer.to(CFG.DEVICE)
     scorer.eval()
     
-    print("Evaluating...")
-    evaluate_tac("human/tac/TAC2010_all.json", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_tac.tsv"), scorer)
-    evaluate_newsroom("human/newsroom/newsroom-human-eval.csv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_newsroom.tsv"), scorer)
-    evaluate_realsumm("human/realsumm/realsumm_100.tsv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_realsumm.tsv"), scorer)
+    if args.tsv:
+        print("Evaluating on", args.tsv)
+        evaluate_realsumm(args.tsv, "test_results.tsv", scorer)
+    else:
+        print("Evaluating on", args.target)
+        if args.target == 'newsroom':
+            evaluate_newsroom("human/newsroom/newsroom-human-eval.csv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_newsroom.tsv"), scorer)
+        elif args.target == 'realsumm':
+            evaluate_realsumm("human/realsumm/realsumm_100.tsv", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_realsumm.tsv"), scorer)
+        elif args.target == 'tac2010':
+            evaluate_tac("human/tac/TAC2010_all.json", os.path.join(CFG.RESULT_ROOT, DATASET, CFG.METHOD, "test_results_tac.tsv"), scorer)
+        else:
+            print("Target dataset evaluation not implemented")
    
