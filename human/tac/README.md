@@ -13,7 +13,7 @@ Request the dataset access [here](https://tac.nist.gov/data/past/2010/Summ10.htm
 
 # Files
 * tac_config.py: path configurations for the dataset
-* tac.py: converts document-summary pairs and scores in TAC result files into JSON format (**TAC2020_all.json**).
+* tac.py: converts document-summary pairs and scores in TAC result files into JSON format (**TAC2010_all.json**).
 * baselines.py: computes the reference-based upper bounds (**baselines.json**). 
 * ref-free-baselines.py: computes the reference-free baselines (**baselines_ref_free.json**).
 * baselines_corr.py: computes the correlation between human evaluation and baselines scores (**rouge_score.tsv**) . 
