@@ -15,4 +15,4 @@ wget -O ext.pkl "https://github.com/neulab/REALSumm/blob/master/scores_dicts/ext
 
 4. Run ``ref_free_baselines.py`` to evaluate reference-free baselines.
 
-5. Run ``test_eval.py`` to compute the correlation between human evaluation scores and those from our model and baselines. Scores from our model are by default under `exp/result*/`. Scores from baselines are produced in Step 3, 4 above. 
+5. Run ``test_eval.py`` to compute the correlation between human evaluation scores and those from our model and baselines. Scores from our model are by default under `exp/result*/`. Scores from baselines are produced in Step 3, 4 above (**predictions/metric_*.tsv**). 

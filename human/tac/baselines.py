@@ -17,11 +17,11 @@ def main():
     WORKERS = 6
     scorers = [CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric(version=2)]
 
-    eval_path = '/home/gluo/Dataset/TAC2010/GuidedSumm2010_eval/ROUGE/'
+    from tac_config import SUMMARY_SET_PATH
     in_file = 'rouge_A.in'
 
     xml = ''
-    with open(os.path.join(eval_path, in_file), 'r', encoding='utf-8') as f:
+    with open(os.path.join(SUMMARY_SET_PATH, in_file), 'r', encoding='utf-8') as f:
         xml = f.read()
 
     eval = xml2dict.parse(xml)
@@ -38,14 +38,14 @@ def main():
         refs = []
         for model in MODELS:
             model_file = model["#text"]
-            with open(os.path.join(eval_path, 'models', model_file), 'r', encoding='cp1252') as f:
+            with open(os.path.join(SUMMARY_SET_PATH, 'models', model_file), 'r', encoding='cp1252') as f:
                 refs.append(f.read())
         
         for peer in PEERS:
             peer_file = peer["#text"]
             print(peer_file)
             peer_text = ''
-            with open(os.path.join(eval_path, 'peers', peer_file), 'r', encoding='cp1252') as f:
+            with open(os.path.join(SUMMARY_SET_PATH, 'peers', peer_file), 'r', encoding='cp1252') as f:
                 peer_text = f.read()
 
             # Evaluate one at a time

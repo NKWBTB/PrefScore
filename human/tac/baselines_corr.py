@@ -59,10 +59,7 @@ def calc_corr(metric_score, scores, rscore_type, hscore_type, method=pearsonr, l
     return corr
 
 def main():
-    TAC_result_root = "/home/gluo/Dataset/TAC2010"
-    score_path = TAC_result_root + "/GuidedSumm2010_eval/manual"
-    rouge_score_path = TAC_result_root + "/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
-
+    from tac_config import SCORE_PATH, ROUGE_SCORE_PATH
     output_file = "rouge_score.tsv"
 
     setIDs = ["A"]
@@ -71,8 +68,8 @@ def main():
     hscore_type = 3
     rscore_type = 21
     
-    scores = get_scores(score_path, summary_types, setIDs)
-    rouge_scores = get_rouge(rouge_score_path)
+    scores = get_scores(SCORE_PATH, summary_types, setIDs)
+    rouge_scores = get_rouge(ROUGE_SCORE_PATH)
 
     method = spearmanr
     level = 'summary'

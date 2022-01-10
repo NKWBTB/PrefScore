@@ -383,36 +383,20 @@ def get_rouge(filepath, dump_to=None):
     return ordered_scores
 
 if __name__ == "__main__":
-    # article_set_path = "F:/Dataset/TAC2010/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
-    # summary_set_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/ROUGE"
-    # score_path = "F:/Dataset/TAC2010/TAC2010/GuidedSumm2010_eval/manual"
-
-    
-
-    article_set_path = "/mnt/insecure/data/TAC/TAC2010/TAC2010_Summarization_Documents/GuidedSumm10_test_docs_files/"
-    summary_set_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE"
-    score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/manual"
-
+    from tac_config import ARTICLE_SET_PATH, SUMMARY_SET_PATH, SCORE_PATH
     dump_to = "TAC2010_all.json"
-
-    rouge_score_path = "/mnt/insecure/data/TAC/TAC2010/GuidedSumm2010_eval/ROUGE/rouge_A.m.out"
-    dump_to_rouge = "rouge2010.json"
 
     setIDs = ["A"]  # we only use set A because set B is not applicable 
     sentence_delimiter = "  "
     summary_types = ["peers", "models"]
     
     
-    articles = get_articles(article_set_path, setIDs, sentence_delimiter)
+    articles = get_articles(ARTICLE_SET_PATH, setIDs, sentence_delimiter)
     _,_,_ = get_statistics(articles)
 
-    summaries = get_summaries(summary_set_path, setIDs, sentence_delimiter, summary_types)
+    summaries = get_summaries(SUMMARY_SET_PATH, setIDs, sentence_delimiter, summary_types)
                                                 # sentence_delimiter,  NOT IN USE 
 
-    scores = get_scores(score_path, summary_types, setIDs)
+    scores = get_scores(SCORE_PATH, summary_types, setIDs)
 
     combined = dump_data(articles, summaries, scores, dump_to=dump_to)
-    
-
-    #rouge_scores = get_rouge(rouge_score_path, dump_to_rouge)
-#    print (rouge_scores)

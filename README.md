@@ -68,15 +68,13 @@ import torch
 import config as CFG
 from model import Scorer
 from evaluate import evaluate
-
-scorer = Scorer()
 # CKPT_PATH is the path of a pretrained pth model file
+scorer = Scorer()
 scorer.load_state_dict(torch.load(CKPT_PATH, map_location=CFG.DEVICE))
 scorer.to(CFG.DEVICE)
 scorer.eval() 
-
+# Test example
 docs = ["This is a document.", "This is another document."]
 sums = ["This is summary1", "This is summary2."]
-
 results = evaluate(docs, sums, scorer)
 ```
