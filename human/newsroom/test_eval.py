@@ -292,11 +292,11 @@ def main():
             print_beautiful(correlations, correlation_types, metrics_newsroom)
 
     # Load scores from baselines
-    tsvs = os.listdir('.') 
+    tsvs = os.listdir('predictions') 
     tsvs = [tsv for tsv in tsvs if tsv.startswith("metric")]
     for tsv in tsvs:
         print (tsv)
-        prediction_tsv = tsv
+        prediction_tsv = os.path.join('predictions', tsv)
 
         scores = load_newsroom_and_ours("./newsroom-human-eval.csv", prediction_tsv)
 
