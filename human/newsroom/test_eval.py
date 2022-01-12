@@ -127,6 +127,8 @@ def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlatio
         if (max(vector_newsroom) == min(vector_newsroom)):
             # A workaround to avoid constant vector issue for pearsonr
             vector_newsroom[0] += 0.001 
+        if (max(vector_other) == min(vector_other)):
+            vector_other[0] += 0.001
         return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
 
     # now begins the summary-level judge 
@@ -261,7 +263,7 @@ def main():
     level = "summary" # "system", "summary", or "pooled"
 
     metrics_newsroom = ["Coherence", "Informativeness", "Fluency", "Relevance"]
-    correlation_types = ["spearmanr"] #, "pearsonr",  "kendalltau"]
+    correlation_types = ["pearsonr"] # "spearmanr"] #, "pearsonr",  "kendalltau"]
     # End of configurations
 
     

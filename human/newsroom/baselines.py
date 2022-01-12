@@ -29,7 +29,7 @@ def pair_title(id2sample, test_file):
         if not "title" in id2sample[k]:
             print(k, id2sample[k]["source_title"])
 
-def main():
+def main(dump=False, calc=True):
     WORKERS = 6
     scorers = [RougeMetric(), CiderMetric(), BleuMetric(n_workers=WORKERS), S3Metric(n_workers=WORKERS), MeteorMetric(), BertScoreMetric(), MoverScoreMetric(version=2)]
 
@@ -54,21 +54,26 @@ def main():
     
     pair_title(id2sample, test_file)
 
-    Refs = []
-    Hyps = []
+    if dump:
+        with open("test.json", "w") as f:
+            json.dump(id2sample, f, indent=2)
 
-    for i in range(len(ids)):
-        Hyps.append(sums[i])
-        Refs.append([id2sample[ids[i]]["summary"]])
-    
-    for scorer in scorers:
-        print(type(scorer))
-        scores = scorer.evaluate_batch(Hyps, Refs, aggregate=False)
-        scorer_names = list(scores[0].keys())
-        for scorer_name in scorer_names:
-            with open(os.path.join("predictions", "metric_"+scorer_name+".tsv"), "w", encoding="utf-8") as f:
-                for score in scores:
-                    f.write(str(score[scorer_name])+"\n")
+    if calc:
+        Refs = []
+        Hyps = []
+
+        for i in range(len(ids)):
+            Hyps.append(sums[i])
+            Refs.append([id2sample[ids[i]]["summary"]])
+        
+        for scorer in scorers:
+            print(type(scorer))
+            scores = scorer.evaluate_batch(Hyps, Refs, aggregate=False)
+            scorer_names = list(scores[0].keys())
+            for scorer_name in scorer_names:
+                with open(os.path.join("predictions", "metric_"+scorer_name+".tsv"), "w", encoding="utf-8") as f:
+                    for score in scores:
+                        f.write(str(score[scorer_name])+"\n")
 
 
 if __name__ == "__main__":
