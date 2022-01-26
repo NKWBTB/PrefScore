@@ -193,7 +193,7 @@ def system_judge(scores, metrics_newsroom, metrics_other, concensus, correlation
 
             mean_score_vector_newsroom.append(mean(vector_newsroom))
             mean_score_vector_other   .append(mean(vector_other))
-        return  eval(f"scipy.stats.{correlation_type}(vector_newsroom, vector_other)")[0]
+        return  eval(f"scipy.stats.{correlation_type}(mean_score_vector_newsroom, mean_score_vector_other)")[0]
 
     # now begins the system-level judge 
     correlations  = {}
