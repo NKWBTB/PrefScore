@@ -17,8 +17,8 @@ def merge_results(result_root, training_sets, include_old=True):
     for doc_id in sd:
         isd_sota_ext = sd_ext[doc_id]
         isd_sota_ext['system_summaries']['bart_out_ext.txt'] = isd_sota_ext['system_summaries']['bart_out.txt']
-        sd[doc_id]['system_summaries'].update(isd_sota_ext['system_summaries'])
         del isd_sota_ext['system_summaries']['bart_out.txt']
+        sd[doc_id]['system_summaries'].update(isd_sota_ext['system_summaries'])
 
     abs_systems = sd_abs[1]['system_summaries'].keys()
     ext_systems = sd_ext[1]['system_summaries'].keys()
@@ -28,7 +28,7 @@ def merge_results(result_root, training_sets, include_old=True):
             for doc_id in sd:
                 for sys_name, system in sd[doc_id]["system_summaries"].items():
                     score = float(f.readline())
-                    
+                    sd[doc_id]["system_summaries"][sys_name]["scores"][metric_name] = score
                     if sys_name in abs_systems:
                         sd_abs[doc_id]["system_summaries"][sys_name]["scores"][metric_name] = score
                     elif sys_name in ext_systems:
@@ -55,7 +55,7 @@ def merge_results(result_root, training_sets, include_old=True):
                 metric_name = "B_{}_{}".format(training_set, method)
                 merge_one(prediction_tsv, metric_name)
     
-    return sd_abs, sd_ext
+    return sd_abs, sd_ext, sd
 
 def calc_corr(level, method, pair, sd, systems):
     
@@ -84,13 +84,14 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
+    result_root = "../../exp/result_bert_base_uncased_TwoBert"
+    # result_root = "/data/data/NLP/anti-rogue/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
     level="summary"
 
-    sd_abs, sd_ext = merge_results(result_root, training_sets, True)
+    sd_abs, sd_ext, sd_mix = merge_results(result_root, training_sets, False)
 
-    for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]:
+    for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]: #, (sd_mix, "mix")]:
         sd = dataset
         mlist = utils.get_metrics_list(sd)
         all_pairs = [('litepyramid_recall', m) for m in mlist if m != 'litepyramid_recall']

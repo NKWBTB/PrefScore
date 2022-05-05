@@ -24,7 +24,7 @@ def combine_shuffle(methods, data_root, dataset_name, split, mode):
     head test_shuffled.tsv -n 6707 > test_shuffled_10_percent.tsv
     """
     for method in methods:
-        dump_root = os.path.join(data_root, dataset_name, method + "_" +  mode)
+        dump_root = os.path.join(data_root, dataset_name.split(':')[0], method + "_" +  mode)
         print ("Combining and shuffling at ", dump_root)
         chops = os.path.join(dump_root, F"{split}_*.tsv")
         concrete = os.path.join(dump_root, F"{split}.tsv")
@@ -199,7 +199,7 @@ def generate_one(dataset_name, split, features, neg_pos_ratio, load_start, load_
         # line.append(" ".join(cross_sum))
         lines.append(line)
 
-    dumpfile = os.path.join(data_root, dataset_name, "pref_ordered", "{}_{}.tsv".format(split, batch_id))
+    dumpfile = os.path.join(data_root, dataset_name.split(':')[0], "pref_ordered", "{}_{}.tsv".format(split, batch_id))
     if not os.path.exists(os.path.dirname(dumpfile)):
         try:
             os.makedirs(os.path.dirname(dumpfile))
@@ -224,11 +224,11 @@ def sample_generation(conf):
 
     for dataset_name in cfg.dataset_names:
         print ("From dataset:", dataset_name)
-        features = cfg.dataset_features[dataset_name]
+        features = cfg.dataset_features[dataset_name.split(':')[0]]
 
         for split in cfg.splits:
             print ("Data split:", split)
-            total_samples = cfg.dataset_sizes_w_split[dataset_name][split]
+            total_samples = cfg.dataset_sizes_w_split[dataset_name.split(':')[0]][split]
 
             boundaries = list(range(0, total_samples, cfg.my_batch_size))
             boundaries.append(total_samples)
