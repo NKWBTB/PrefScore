@@ -14,28 +14,31 @@ class Scorer(nn.Module):
         super(Scorer, self).__init__()
         self.tokenizer = BertTokenizer.from_pretrained(CFG.BERT_MODEL)
         self.separateEncode = separateEncode
-        self.similarity = 'InnerProduct' # 'Cosine' 
+        self.similarity = 'InnerProduct' # 'Cosine'    
         self.model = BertModel.from_pretrained(CFG.BERT_MODEL)
-        self.fc = nn.Linear(self.model.config.hidden_size, 1)
+        if not self.separateEncode:
+            self.fc = nn.Linear(self.model.config.hidden_size, 1)
     
-    def encode(self, text, model):
+    def encode(self, text):
         inputs = self.tokenizer(text, padding=True, truncation=True , return_tensors='pt').to(CFG.DEVICE)
-        outputs = model(**inputs)
-        return outputs
+        outputs = self.model(**inputs)
+        return outputs.pooler_output
     
     def forward(self, article, summary):
         if not self.separateEncode:
             inputs = self.tokenizer(article, summary, padding='max_length', truncation="longest_first" , return_tensors='pt').to(CFG.DEVICE)
             outputs = self.model(**inputs)
             x = self.fc(outputs.pooler_output)
-            return x
-        
-        article_outputs = self.encode(article, self.model)
-        summary_outputs = self.encode(summary, self.model)
-        if self.similarity != 'Cosine':
-            return torch.sum(article_outputs.pooler_output * summary_outputs.pooler_output, dim=-1, keepdim=True)
         else:
-            return F.cosine_similarity(article_outputs.pooler_output, summary_outputs.pooler_output).view(-1, 1)
+            article_outputs = self.encode(article)
+            summary_outputs = self.encode(summary)
+        
+            if self.similarity == 'InnerProduct':
+                x = torch.sum(article_outputs * summary_outputs, dim=-1, keepdim=True) 
+            elif self.similarity == 'Cosine':
+                x = F.cosine_similarity(article_outputs, summary_outputs).view(-1, 1)
+        
+        return x
 
 class Siamese(nn.Module):
     def __init__(self, separateEncode = False):
@@ -46,21 +49,18 @@ class Siamese(nn.Module):
         if not self.base_model.separateEncode:
             out1 = self.base_model(article, summary1)
             out2 = self.base_model(article, summary2)
-            out = torch.cat((out1, out2), -1)
-            return out
-        
-        article_outputs = self.base_model.encode(article, self.base_model.model)
-        summary1_outputs = self.base_model.encode(summary1, self.base_model.model)
-        summary2_outputs = self.base_model.encode(summary2, self.base_model.model)
+        else:
+            article_outputs = self.base_model.encode(article)
+            summary1_outputs = self.base_model.encode(summary1)
+            summary2_outputs = self.base_model.encode(summary2)
 
-        if self.base_model.similarity != 'Cosine':
-            out1 = torch.sum(article_outputs.pooler_output * summary1_outputs.pooler_output, dim=-1, keepdim=True)
-            out2 = torch.sum(article_outputs.pooler_output * summary2_outputs.pooler_output, dim=-1, keepdim=True)
-            return torch.cat((out1, out2), -1)
-        
-        out1 = F.cosine_similarity(article_outputs.pooler_output, summary1_outputs.pooler_output).view(-1, 1)
-        out2 = F.cosine_similarity(article_outputs.pooler_output, summary2_outputs.pooler_output).view(-1, 1)
-        # print(out1.shape, out2.shape)
+            if self.base_model.similarity == 'InnerProduct':
+                out1 = torch.sum(article_outputs * summary1_outputs, dim=-1, keepdim=True)
+                out2 = torch.sum(article_outputs * summary2_outputs, dim=-1, keepdim=True)
+            elif self.base_model.similarity == 'Cosine':
+                out1 = F.cosine_similarity(article_outputs, summary1_outputs).view(-1, 1)
+                out2 = F.cosine_similarity(article_outputs, summary2_outputs).view(-1, 1)
+    
         return torch.cat((out1, out2), -1)
 
 class CustomDataset(Dataset):
@@ -88,6 +88,15 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx][0], self.data[idx][1], self.data[idx][2]
 
+class AntiRougeDataset(CustomDataset):
+    def __init__(self, datapath):
+        self.data = []
+        with open(datapath, "r", encoding="utf-8") as f:
+            for line in f:
+                elements = line.split('\t')
+                size = len(elements)
+                for i in range(3, size-1, 2):
+                    self.data.append([elements[0], elements[1], elements[i]])
 
 def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEntropyLoss', margin=0.0, shuffle=True):
     epochs = CFG.EPOCHS
@@ -119,7 +128,7 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEn
                 running_loss += loss.item()
                 
                 pbar.update(1)
-                if j % 500 == 499:
+                if j % 1000 == 999:
                     pbar.write("Iteration {}, Loss {}".format(j+1, running_loss))
                     running_loss = 0
         

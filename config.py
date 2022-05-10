@@ -7,7 +7,7 @@ DATASET_ROOT= 'exp/data/'
 RESULT_ROOT = "exp/result_bert_base_uncased"
 METHOD = 'pref_ordered'
 
-EPOCHS = 1
+EPOCHS = 2
 BATCH_SIZE = 8
-MAX_ITERATION = 10000
+MAX_ITERATION = 15000
 LR = 1e-5

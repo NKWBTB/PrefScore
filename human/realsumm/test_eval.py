@@ -84,7 +84,7 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased_TwoBert"
+    result_root = "../../exp/result_bert_base_uncased"
     # result_root = "/data/data/NLP/anti-rogue/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
     level="summary"
