@@ -110,7 +110,7 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEn
     model.train()
     num_iter = 0
     with tqdm(total=max_iter) as pbar:
-        while True:
+        while num_iter < max_iter:
             for j, (article, sum1, sum2) in enumerate(train_dataloader):
                 if num_iter >= max_iter:
                     break
