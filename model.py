@@ -99,7 +99,6 @@ class AntiRougeDataset(CustomDataset):
                     self.data.append([elements[0], elements[1], elements[i]])
 
 def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEntropyLoss', margin=0.0, shuffle=True):
-    epochs = CFG.EPOCHS
     optimizer = torch.optim.Adam(model.parameters(), lr = CFG.LR)
     loss_fn = nn.CrossEntropyLoss()
     if loss_func == 'MarginRankingLoss': loss_fn = nn.MarginRankingLoss(margin=margin)
@@ -107,12 +106,13 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEn
     train_dataloader = DataLoader(train_set, batch_size=CFG.BATCH_SIZE, shuffle=shuffle)
     print(loss_func, margin, shuffle)
 
-    while epochs > 0:
-        running_loss = 0.0
-        model.train()
-        with tqdm(total=min(len(train_dataloader), max_iter)) as pbar:
+    running_loss = 0.0
+    model.train()
+    num_iter = 0
+    with tqdm(total=max_iter) as pbar:
+        while True:
             for j, (article, sum1, sum2) in enumerate(train_dataloader):
-                if j >= max_iter:
+                if num_iter >= max_iter:
                     break
                 output = model(article, sum1, sum2)
                 if loss_func == 'CrossEntropyLoss':
@@ -127,12 +127,12 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEn
                 optimizer.step()
                 running_loss += loss.item()
                 
+                num_iter += 1
                 pbar.update(1)
-                if j % 1000 == 999:
+                if num_iter % 1000 == 999:
                     pbar.write("Iteration {}, Loss {}".format(j+1, running_loss))
                     running_loss = 0
         
-        epochs -= 1
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
