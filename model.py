@@ -5,14 +5,17 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import os
-from transformers import BertTokenizer, BertModel
+from transformers import BertTokenizer, BertModel, BertTokenizerFast, logging
 from tqdm import tqdm
 import config as CFG
+
+
+logging.set_verbosity_error()
 
 class Scorer(nn.Module):
     def __init__(self, separateEncode = False):
         super(Scorer, self).__init__()
-        self.tokenizer = BertTokenizer.from_pretrained(CFG.BERT_MODEL)
+        self.tokenizer = BertTokenizerFast.from_pretrained(CFG.BERT_MODEL)
         self.separateEncode = separateEncode
         self.similarity = 'InnerProduct' # 'Cosine'    
         self.model = BertModel.from_pretrained(CFG.BERT_MODEL)
