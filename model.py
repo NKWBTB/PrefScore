@@ -133,7 +133,7 @@ def train_model(model, train_set, max_iter=CFG.MAX_ITERATION, loss_func='CrossEn
                 num_iter += 1
                 pbar.update(1)
                 if num_iter % 1000 == 999:
-                    pbar.write("Iteration {}, Loss {}".format(j+1, running_loss))
+                    pbar.write("Iteration {}, Loss {}".format(num_iter+1, running_loss))
                     running_loss = 0
         
 

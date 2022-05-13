@@ -5,7 +5,7 @@ DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 DATASET_ROOT= 'exp/data/'
 RESULT_ROOT = "exp/result_bert_base_uncased"
-METHOD = 'pref_ordered'
+METHOD = 'pseudo_ns' #'pref_ordered'
 
 # EPOCHS = 1
 BATCH_SIZE = 8

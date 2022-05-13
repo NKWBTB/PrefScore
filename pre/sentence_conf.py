@@ -26,7 +26,7 @@ dataset_sizes_w_split = {# new for sentence-level mutation
 
 # Must match their names in TFDS 
 # dataset_name = "dryrun" 
-dataset_names = ["cnn_dailymail", "newsroom"] # "big_patent:2.0.0"] #, "billsum", "scientific_papers", "cnn_dailymail"] 
+dataset_names = ["newsroom", "big_patent:2.0.0", "billsum", "scientific_papers"] # "cnn_dailymail", ] 
 
 splits = ['train', 'test'] # We only need the train split. We skip validation and test.
 # note that billsum has no validation set
