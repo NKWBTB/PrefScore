@@ -84,23 +84,24 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
+    result_root = "../../exp/result_bert_base_uncased_4_23"
     # result_root = "/data/data/NLP/anti-rogue/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
     level="summary"
 
     sd_abs, sd_ext, sd_mix = merge_results(result_root, training_sets, False)
 
-    for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]: #, (sd_mix, "mix")]:
-        sd = dataset
-        mlist = utils.get_metrics_list(sd)
-        all_pairs = [('litepyramid_recall', m) for m in mlist if m != 'litepyramid_recall']
-        systems = utils.get_system_level_scores(sd, mlist, agg='mean')
-        print("---------------{}--------------".format(name))
-        for pair in all_pairs: print(pair[1])
-        for pair in all_pairs:
-            for method in [spearmanr]: #, pearsonr, kendalltau]:
-                corr = calc_corr(level, method, pair, sd, systems)
+    mlist = utils.get_metrics_list(sd_mix)
+    all_pairs = [('litepyramid_recall', m) for m in mlist if m != 'litepyramid_recall']
+
+    print("metrics abs ext")
+    for pair in all_pairs:
+        print(pair[1], end=' ')
+        for method in [spearmanr]: #, pearsonr, kendalltau]:
+            for dataset, name in [(sd_abs, "abs"), (sd_ext, "ext")]: #, (sd_mix, "mix")]:
+                sd = dataset
+                #systems = utils.get_system_level_scores(sd, mlist, agg='mean')
+                corr = calc_corr(level, method, pair, sd, None)
                 print("%.4f" % corr, end=" ")
             
             print("")
