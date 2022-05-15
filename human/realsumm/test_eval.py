@@ -102,7 +102,7 @@ def main():
                 sd = dataset
                 #systems = utils.get_system_level_scores(sd, mlist, agg='mean')
                 corr = calc_corr(level, method, pair, sd, None)
-                print("%.4f" % corr, end=" ")
+                print("\t%.4f" % corr, end=" ")
             
             print("")
 
