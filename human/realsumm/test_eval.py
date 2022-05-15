@@ -84,7 +84,7 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased_4_23"
+    result_root = "../../exp/result_bert_base_uncased"
     # result_root = "/data/data/NLP/anti-rogue/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
     level="summary"
@@ -102,7 +102,7 @@ def main():
                 sd = dataset
                 #systems = utils.get_system_level_scores(sd, mlist, agg='mean')
                 corr = calc_corr(level, method, pair, sd, None)
-                print("%.4f" % corr, end=" ")
+                print("\t%.4f" % corr, end=" ")
             
             print("")
 
