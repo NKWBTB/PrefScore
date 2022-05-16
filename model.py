@@ -13,25 +13,26 @@ import config as CFG
 logging.set_verbosity_error()
 
 class Scorer(nn.Module):
-    def __init__(self, separateEncode = False):
+    def __init__(self, separateEncode = False, use_pooler = True):
         super(Scorer, self).__init__()
         self.tokenizer = BertTokenizerFast.from_pretrained(CFG.BERT_MODEL)
         self.separateEncode = separateEncode
-        self.similarity = 'InnerProduct' # 'Cosine'    
+        self.use_pooler = use_pooler
+        self.similarity = 'Cosine' #'InnerProduct' #    
         self.model = BertModel.from_pretrained(CFG.BERT_MODEL)
         if not self.separateEncode:
             self.fc = nn.Linear(self.model.config.hidden_size, 1)
     
     def encode(self, text):
-        inputs = self.tokenizer(text, padding=True, truncation=True , return_tensors='pt').to(CFG.DEVICE)
+        inputs = self.tokenizer(list(text), padding=True, truncation=True , return_tensors='pt').to(CFG.DEVICE)
         outputs = self.model(**inputs)
-        return outputs.pooler_output
+        return outputs.pooler_output if self.use_pooler else outputs.last_hidden_state[:, 0]
     
     def forward(self, article, summary):
         if not self.separateEncode:
             inputs = self.tokenizer(article, summary, padding='max_length', truncation="longest_first" , return_tensors='pt').to(CFG.DEVICE)
             outputs = self.model(**inputs)
-            x = self.fc(outputs.pooler_output)
+            x = self.fc(outputs.pooler_output) if self.use_pooler else self.fc(outputs.last_hidden_state[:, 0])
         else:
             article_outputs = self.encode(article)
             summary_outputs = self.encode(summary)
@@ -44,9 +45,9 @@ class Scorer(nn.Module):
         return x
 
 class Siamese(nn.Module):
-    def __init__(self, separateEncode = False):
+    def __init__(self, separateEncode = False, use_pooler = True):
         super(Siamese, self).__init__()
-        self.base_model = Scorer(separateEncode)
+        self.base_model = Scorer(separateEncode, use_pooler)
     
     def forward(self, article, summary1, summary2):
         if not self.base_model.separateEncode:
