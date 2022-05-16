@@ -13,20 +13,55 @@ import config as CFG
 logging.set_verbosity_error()
 
 class Scorer(nn.Module):
-    def __init__(self, separateEncode = False, use_pooler = True):
+    def __init__(self, separateEncode = False, use_pooler = True, use_lscore = False):
         super(Scorer, self).__init__()
         self.tokenizer = BertTokenizerFast.from_pretrained(CFG.BERT_MODEL)
         self.separateEncode = separateEncode
         self.use_pooler = use_pooler
         self.similarity = 'Cosine' #'InnerProduct' #    
+        self.use_lscore = use_lscore
         self.model = BertModel.from_pretrained(CFG.BERT_MODEL)
         if not self.separateEncode:
             self.fc = nn.Linear(self.model.config.hidden_size, 1)
+        if self.use_lscore:
+            self.decoder_l = nn.Sequential(
+                nn.Linear(self.model.config.hidden_size, self.model.config.hidden_size, bias=True),
+                nn.GELU(),
+                nn.Linear(self.model.config.hidden_size, self.model.config.vocab_size, bias=True)
+            )
     
     def encode(self, text):
-        inputs = self.tokenizer(list(text), padding=True, truncation=True , return_tensors='pt').to(CFG.DEVICE)
+        inputs = self.tokenizer(list(text), padding="max_length", truncation=True , return_tensors='pt').to(CFG.DEVICE)
         outputs = self.model(**inputs)
-        return outputs.pooler_output if self.use_pooler else outputs.last_hidden_state[:, 0]
+        return outputs, inputs
+
+    def l_score(self, summary_inputs, summary_outputs):
+        sum_seq_output = summary_outputs.last_hidden_state
+        input_ids = summary_inputs["input_ids"]
+        input_mask = summary_inputs["attention_mask"]
+        batch_size = summary_outputs.last_hidden_state.shape[0]
+
+        score = self.decoder_l(sum_seq_output) #.unsqueeze(0)
+        score = F.log_softmax(score, dim=2)
+
+        # temp = torch.zeros(batch_size, self.model.config.max_position_embeddings, self.model.config.vocab_size).to(CFG.DEVICE)
+        # one_hot_input_ids = temp.scatter_(2, input_ids.view(batch_size, -1, 1), 1).float()
+
+        score = torch.sum(torch.gather(score, 2, input_ids.view(batch_size, -1, 1)).view(batch_size, -1), dim=-1, keepdim=True) / \
+            (torch.sum(input_mask, dim=-1, keepdim=True).float())
+        score = (score+200)/100
+        return score
+    
+    def s_score(self, article_outputs, summary_outputs):
+        if self.similarity == 'InnerProduct':
+            x = torch.sum(article_outputs.pooler_output * summary_outputs.pooler_output, dim=-1, keepdim=True) \
+                if self.use_pooler \
+                else torch.sum(article_outputs.last_hidden_state[:, 0] * summary_outputs.last_hidden_state[:, 0], dim=-1, keepdim=True)
+        elif self.similarity == 'Cosine':
+            x = F.cosine_similarity(article_outputs.pooler_output, summary_outputs.pooler_output).view(-1, 1) \
+                if self.use_pooler \
+                else F.cosine_similarity(article_outputs.last_hidden_state[:, 0], summary_outputs.last_hidden_state[:, 0]).view(-1, 1)
+        return x
     
     def forward(self, article, summary):
         if not self.separateEncode:
@@ -34,36 +69,32 @@ class Scorer(nn.Module):
             outputs = self.model(**inputs)
             x = self.fc(outputs.pooler_output) if self.use_pooler else self.fc(outputs.last_hidden_state[:, 0])
         else:
-            article_outputs = self.encode(article)
-            summary_outputs = self.encode(summary)
-        
-            if self.similarity == 'InnerProduct':
-                x = torch.sum(article_outputs * summary_outputs, dim=-1, keepdim=True) 
-            elif self.similarity == 'Cosine':
-                x = F.cosine_similarity(article_outputs, summary_outputs).view(-1, 1)
-        
+            article_outputs, article_inputs = self.encode(article)
+            summary_outputs, summary_inputs = self.encode(summary)
+            x = self.s_score(article_outputs, summary_outputs)
+            if self.use_lscore:
+                x += self.l_score(summary_inputs, summary_outputs)
         return x
 
 class Siamese(nn.Module):
-    def __init__(self, separateEncode = False, use_pooler = True):
+    def __init__(self, separateEncode = False, use_pooler = True, use_lscore = False):
         super(Siamese, self).__init__()
-        self.base_model = Scorer(separateEncode, use_pooler)
+        self.base_model = Scorer(separateEncode, use_pooler, use_lscore)
     
     def forward(self, article, summary1, summary2):
         if not self.base_model.separateEncode:
             out1 = self.base_model(article, summary1)
             out2 = self.base_model(article, summary2)
         else:
-            article_outputs = self.base_model.encode(article)
-            summary1_outputs = self.base_model.encode(summary1)
-            summary2_outputs = self.base_model.encode(summary2)
+            article_outputs, article_inputs = self.base_model.encode(article)
+            summary1_outputs, summary1_inputs = self.base_model.encode(summary1)
+            summary2_outputs, summary2_inputs = self.base_model.encode(summary2)
 
-            if self.base_model.similarity == 'InnerProduct':
-                out1 = torch.sum(article_outputs * summary1_outputs, dim=-1, keepdim=True)
-                out2 = torch.sum(article_outputs * summary2_outputs, dim=-1, keepdim=True)
-            elif self.base_model.similarity == 'Cosine':
-                out1 = F.cosine_similarity(article_outputs, summary1_outputs).view(-1, 1)
-                out2 = F.cosine_similarity(article_outputs, summary2_outputs).view(-1, 1)
+            out1 = self.base_model.s_score(article_outputs, summary1_outputs)
+            out2 = self.base_model.s_score(article_outputs, summary2_outputs)
+            if self.base_model.use_lscore:
+                out1 += self.base_model.l_score(summary1_inputs, summary1_outputs)
+                out2 += self.base_model.l_score(summary2_inputs, summary2_outputs)
     
         return torch.cat((out1, out2), -1)
 
