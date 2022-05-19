@@ -131,7 +131,7 @@ def load_tac_json(task_json, summarizer_type):
 
     return tac_scores 
 
-def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
+def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool", print_out=True, doc_ids = None):
     """Compute the correlation coefficients between BERT results on TAC test set and human evaluated scores on TAC test set
 
     tac_results: 1-D list of floats, 46(docset)x47(summarizers) elements
@@ -139,6 +139,7 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
     """
     tac_scores = np.array(tac_scores)
     docs = 46
+    docs_range = range(docs) if doc_ids is None else doc_ids
     summarizers = int(tac_scores.shape[0] / docs)
     
     corr = None
@@ -148,9 +149,9 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
         tac_scores = tac_scores.reshape(docs, summarizers, 3)
         tac_results = np.array(tac_results).reshape(docs, summarizers)
         corr = np.zeros((3, ), dtype=np.float32)
-        for doc in range(docs):
+        for doc in docs_range:
             corr += np.array([method(tac_results[doc, :], tac_scores[doc, :, i])[0] for i in range(3)])
-        corr /= doc
+        corr /= docs
     elif level == 'system':
         tac_scores = tac_scores.reshape(docs, summarizers, 3)
         tac_results = np.array(tac_results).reshape(docs, summarizers)
@@ -165,18 +166,18 @@ def calc_cc(tac_results, tac_scores, method=pearsonr, level="pool"):
 
     line = ["%.5f"%i for i in corr]
     line = "\t".join(line)
-
-    print (line, end = ' ')
+    if print_out: print (line, end = ' ')
     # for i in range(3):
     #     corr_pearson = pearsonr(tac_results, tac_scores[:, i])
     #     corr_spearman = spearmanr(tac_results, tac_scores[:, i])
 
     #     print(corr_pearson[0], corr_spearman[0])
     # print("---------------------------")
+    return corr
 
 
 def cc_all(plot = False):
-    BERT_result_prefix = "../../exp/result_bert_base_uncased/"
+    BERT_result_prefix = "../../exp/result_bert_base_uncased"
     datasets = os.listdir(BERT_result_prefix)
     tac_json_file = "TAC2010_all.json"
     human_only="machine"

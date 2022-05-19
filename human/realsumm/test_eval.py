@@ -57,8 +57,9 @@ def merge_results(result_root, training_sets, include_old=True):
     
     return sd_abs, sd_ext, sd
 
-def calc_corr(level, method, pair, sd, systems):
-    
+def calc_corr(level, method, pair, sd, systems, ids = None):
+    if ids is None:
+        ids = sd
     corr = 0
     if level == "pool":
         x = []
@@ -69,7 +70,7 @@ def calc_corr(level, method, pair, sd, systems):
                 y.append(sys["scores"][pair[1]])
         corr = method(x, y)[0]
     elif level == "summary":
-        for doc_id in sd:
+        for doc_id in ids:
             x = [sys["scores"][pair[0]] for sys_name, sys in sd[doc_id]["system_summaries"].items()]
             y = [sys["scores"][pair[1]] for sys_name, sys in sd[doc_id]["system_summaries"].items()]
             corr += method(x, y)[0]
@@ -84,7 +85,7 @@ def calc_corr(level, method, pair, sd, systems):
 
 def main():
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
+    result_root = "../../exp/result_bert_base_uncased/"
     # result_root = "/data/data/NLP/anti-rogue/result_bert_base_uncased"
     training_sets = os.listdir(result_root)
     level="summary"

@@ -78,7 +78,7 @@ def load_newsroom_and_ours(newsroom_csv, prediction_tsv):
 # scores = load_newsroom_and_ours("./newsroom-human-eval.csv", "/mnt/12T/data/NLP/anti-rogue/result_base_sent/billsum/cross_sent_delete/test_results_newsroom.tsv")
 
 # %% 
-def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlation_types):
+def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlation_types, doc_ids=None):
     """Summary-level evaluation between newsroom metrics and metrics from another group 
 
     metrics_newsroom: e.g., ["Coherence", "Informativeness", "Fluency", "Relevance"]
@@ -138,7 +138,10 @@ def summary_judge(scores, metrics_newsroom, metrics_other, concensus, correlatio
         correlations[correlation_type] = {}
         for metric_newsroom in metrics_newsroom: # one metric from newsroom
             for metric_other in metrics_other:  # one metric to evaluate against newsroom 
-                correlation_across_documents = [get_correlation_per_doc_given_metrics(scores_of_one_document, metric_newsroom, metric_other, concensus, correlation_type) for scores_of_one_document in scores.values()]
+                if doc_ids is None:
+                    correlation_across_documents = [get_correlation_per_doc_given_metrics(scores_of_one_document, metric_newsroom, metric_other, concensus, correlation_type) for scores_of_one_document in scores.values()]
+                else:
+                    correlation_across_documents = [get_correlation_per_doc_given_metrics(scores[id], metric_newsroom, metric_other, concensus, correlation_type) for id in doc_ids]
                 # a list of floats
 
                 correlations[correlation_type]\
@@ -253,7 +256,7 @@ def main():
     """
 
     # Configurations 
-    result_root = "../../exp/result_bert_base_uncased"
+    result_root = "../../exp/result_bert_base_uncased/"
 
     # training_sets = ["billsum"] #, "scientific_papers", "big_patent", "cnn_dailymail"]
     training_sets = os.listdir(result_root)
