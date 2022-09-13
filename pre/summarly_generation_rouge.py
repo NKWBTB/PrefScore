@@ -14,12 +14,12 @@ from scipy.spatial.distance import cosine
 # from summ_eval.bert_score_metric import BertScoreMetric
 # from summ_eval.rouge_metric import RougeMetric
 # import embed as E
-import evaluate as E
+# import evaluate as E
 import time
 from tqdm import tqdm
 
 # export TOKENIZERS_PARALLELISM=true
-metric = E.load("bertscore")
+# metric = E.load("bertscore")
 # metric = BertScoreMetric()
 # metric = RougeMetric()
 # mname = "bert_score_recall"
@@ -54,6 +54,32 @@ def addPeriod(text):
     if text[-1] != '.':
         text += " ."
     return text
+
+def postprocessing(text_list):
+    # Merge short sentences in to previous sentences
+    texts = []
+    for sents in text_list:
+        new_list = []
+        text = ""
+        for sent in sents:
+            text = text + sent + " "
+            
+            def isSent(test_text):
+                test_text = test_text.strip()
+                tokens = test_text.split()
+                count = 0
+                for token in tokens:
+                    if any(c.isalpha() for c in token):
+                        count += 1
+                return count >= 3
+
+            if isSent(text):
+                new_list.append(addPeriod(text))
+                text = ""
+        
+        if text.strip() != "": new_list.append(addPeriod(text))
+        texts.append(new_list)
+    return texts
 
 def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4):
     """For each pair, return the summary as a list of strings 
@@ -96,33 +122,6 @@ def split_pairs(pairs, tokenizer_name="spacy", spacy_batch_size=2**10, n_jobs= 4
         from nltk.tokenize import sent_tokenize
         list_summaries = [sent_tokenize(_sum) for (_doc, _sum) in pairs]
         list_documents = [sent_tokenize(_doc) for (_doc, _sum) in pairs]
-
-    def postprocessing(text_list):
-        # Merge short sentences in to previous sentences
-        texts = []
-        for sents in text_list:
-            new_list = []
-            text = ""
-            for sent in sents:
-                text = text + sent + " "
-                
-                def isSent(test_text):
-                    test_text = test_text.strip()
-                    tokens = test_text.split()
-                    count = 0
-                    for token in tokens:
-                        if any(c.isalpha() for c in token):
-                            count += 1
-                    return count >= 3
-
-                if isSent(text):
-                    new_list.append(addPeriod(text))
-                    text = ""
-            
-            if text.strip() != "": new_list.append(addPeriod(text))
-            texts.append(new_list)
-        return texts
-                                    
 
     new_pairs = list(zip(
                     postprocessing(list_documents), # list of list of str, segmented documents
