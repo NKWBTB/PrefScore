@@ -54,11 +54,6 @@ python3 evaluate.py --dataset billsum --target newsroom
 
 Code for computing the correlation between our models' predictions and human ratings from the three datasets is in the `human` folder. 
 
-## Reproduction Hint
-The pretrained model and results are release in [exp.zip](https://drive.google.com/file/d/1IFXiH7di9pBM74dLCexNAD_ycOhjfIyD/view?usp=sharing), download and extract in the repo folder for reproducing the results in the paper.
-
-https://drive.google.com/file/d/1IFXiH7di9pBM74dLCexNAD_ycOhjfIyD/view?usp=sharing
-
 ## Misc
 1. To evaluate on a custom dataset, format the dataset as a tsv file where each line starts with a document and followed by serveral summaries of the document separated by ``'\t'``. See ``example.tsv`` for example.
 

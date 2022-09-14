@@ -99,7 +99,7 @@ class Siamese(nn.Module):
         return torch.cat((out1, out2), -1)
 
 class CustomDataset(Dataset):
-    def __init__(self, datapath, nums=None, hierarchical = True):
+    def __init__(self, datapath, nums=None, hierarchical=False):
         self.data = []
         print("Hierarchichal", hierarchical)
         with open(datapath, "r", encoding="utf-8") as f:

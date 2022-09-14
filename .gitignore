@@ -20,5 +20,6 @@ datasets
 *.ckpt.*
 checkpoint
 *-checkpoint.ipynb
+.ipynb_checkpoints
 
 exp
